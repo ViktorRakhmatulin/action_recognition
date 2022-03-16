@@ -14,13 +14,22 @@ Multimedia Tools and Applications, 78(19), 27309-27331.
 Experiments are conducted on the HDM-05 dataset. _**NOTE**: Few sequences from the HDM05 dataset are partially missing labels.
 The above videos show two sequences of this kind. The prediction of our model is on top, while the (wrong) groundtruth is on the bottom._
 
-## How to reproduce
+## How to reproduce (Comments from Viktor)
 
-1. Download the proprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
+Configured via Anaconda-Navigator.  
+Tested on Ubuntu 20.04. Python 3.6. 
+Executed  the following command in conda environment (for cuda support)
 
-2. Run `parse_HDM05_data.sh` to generate data splits.
+conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
+taken from https://pytorch.org/
 
-3. See `train_classify.py` and `train_segment.py` if you want to train single models for classification or segmentation, respectively.
 
-   To train all the segmentation models of the paper in batch or check out some examples of invocation, see `train_segmentation_models.sh`.
+1. Download the preprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
+
+2. Run 'bash parse_HDM05_data.sh` to generate data splits 
+3. Run 'bash train_classification_models.sh` to train an LSTM-based classification model 
+Segmentation as far as I understood is aimed to find the beginning and the end of the action in given sequence.
+We are more interested in classification (mapping a sequence to a class) 
+Python train_classify.py`  
+4.  `train_segmentation_models.sh` contains examples for SEGMENTATION task
 

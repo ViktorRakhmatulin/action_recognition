@@ -44,8 +44,8 @@ def compute_loss(output, target, args):
     n_classes = output.shape[1]
 
     # build one-hot vector
-    target = target.data.cpu()[0]
-    y = torch.zeros(1, n_classes)
+    target = torch.tensor(target.data.cpu()[0],dtype=torch.long)
+    y = torch.zeros(1, n_classes,dtype=torch.long)
     y[0, target] = 1
 
     if args.cuda:
@@ -79,7 +79,7 @@ def evaluate(loader, model, args):
         _y = y
         if args.cuda:
             x = x.cuda()
-            y = y.cuda(async=True)
+            y = y.cuda(non_blocking=True)
 
         x = Variable(x, volatile=True)
         y = Variable(y, volatile=True)
@@ -87,8 +87,7 @@ def evaluate(loader, model, args):
         y_hat = model(x)
 
         loss = compute_loss(y_hat, y, args)
-        avg_loss += loss.data[0]
-
+        avg_loss += loss.item()
         acc1, acc5 = accuracy(y_hat.cpu(), _y, topk=(1, 5))
         action_correct[_y] += (acc1 / 100.0) + (acc5 / 100.0)
         action_count[_y] += 1
@@ -120,7 +119,7 @@ def train(loader, model, optimizer, epoch, args):
     for i, (x, y) in enumerate(progress_bar):
         if args.cuda:
             x = x.cuda()
-            y = y.cuda(async=True)
+            y = y.cuda(non_blocking=True)
 
         x = Variable(x, requires_grad=False)
         y = Variable(y, requires_grad=False)
@@ -130,7 +129,7 @@ def train(loader, model, optimizer, epoch, args):
         loss = compute_loss(y_hat, y, args)
         loss.backward()
 
-        avg_loss += loss.data[0]
+        avg_loss += loss.item()
 
         if (i + 1) % args.accumulate == 0 or (i + 1) == n_samples:
             if args.clip_norm:
@@ -341,7 +340,7 @@ if __name__ == '__main__':
     # parser.add_argument('-m','--momentum', type=float, default=0.9, help='momentum (only for SGD)')
     parser.add_argument('-a', '--accumulate', type=int, default=40, help='batch accumulation')
     parser.add_argument('-c', '--clip-norm', type=float, default=0.0, help='max gradient norm (0 for no clipping)')
-    parser.add_argument('-e', '--epochs', type=int, default=150, help='number of training epochs')
+    parser.add_argument('-e', '--epochs', type=int, default=100, help='number of training epochs')
     parser.add_argument('--lr', '--learning-rate', type=float, default=0.0005, help='learning rate')
     parser.add_argument('--wd', '--weight-decay', type=float, default=1e-4, help='weight decay')
     parser.add_argument('-r', '--resume', help='run dir to resume training from')
@@ -356,9 +355,9 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=42, help='random seed to reproduce runs')
     parser.add_argument('--debug', action='store_true', help='debug mode')
 
-    parser.set_defaults(bidirectional=True)
+    parser.set_defaults(bidirectional=False)
     parser.set_defaults(cuda=True)
-    parser.set_defaults(debug=False)
+    parser.set_defaults(debug=True)
     parser.set_defaults(keep=False)
     args = parser.parse_args()
     

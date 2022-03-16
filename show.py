@@ -69,7 +69,7 @@ def predict(model, loader, cuda=False):
     for x, y in tqdm(loader):
         if cuda:
             x = x.cuda()
-            y = y.cuda(async=True)
+            y = y.cuda(non_blocking=True)
 
         x = Variable(x, volatile=True)
         y = Variable(y, volatile=True)
@@ -156,6 +156,7 @@ def offset_eval(runs):
     for run in runs:
         run_info, model, loader = load_run(run, data=args.data, offset='all')
         params = run_info[-1]
+        loader = loader[1]
         dataset = loader.dataset
 
         _, targets, confidences = predict(model, loader, cuda=params['cuda'])
