@@ -1,0 +1,3 @@
+[submodule "ST-TR"]
+	path = ST-TR
+	url = https://github.com/nvski/ST-TR
