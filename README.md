@@ -20,8 +20,8 @@ Configured via Anaconda-Navigator.
 Tested on Ubuntu 20.04. Python 3.6. 
 Executed  the following command in conda environment (for cuda support)
 
-conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
-taken from https://pytorch.org/
+'conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch'
+- taken from https://pytorch.org/
 
 
 1. Download the preprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
