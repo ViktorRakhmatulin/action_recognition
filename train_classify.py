@@ -17,20 +17,31 @@ from tqdm import trange, tqdm
 from dataset import MotionDataset
 from model import MotionModel
 
-
+# acc1 = TP(for highly probable class)/(amount of all test samples)
+# acc5 = TP(among top k probable classes)/(amount of all test samples)
 def accuracy(output, target, topk=(1, 5)):
+
     """Computes the accuracy@k for the specified values of k"""
+    # print("accuracy target.size()", target.size())
     maxk = max(topk)
+    # print("output", output)
+    # print("target",target)
+
     batch_size = target.size(0)
+    # print("batch_size",batch_size)
     output = output.data if isinstance(output, Variable) else output
 
     vals, pred = output.topk(maxk, dim=1, largest=True, sorted=True)
+    # print("output sorted", vals, pred)
     pred = pred.t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
+    # print("output transposed", pred)
 
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+    # print("correct ", correct)
     res = []
     for k in topk:
         correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+        # print("correct_k",correct_k)
         correct_k.mul_(100.0 / batch_size)
         res.append(correct_k[0])
     return res
@@ -39,6 +50,7 @@ def accuracy(output, target, topk=(1, 5)):
 def compute_loss(output, target, args):
 
     if args.head == 'softmax' and args.label_smoothing == 0:
+        # print("compute_loss softmax without smoothing")
         return F.cross_entropy(output, target)
 
     n_classes = output.shape[1]
@@ -57,9 +69,11 @@ def compute_loss(output, target, args):
             (1 - y) * args.label_smoothing / (n_classes - 1)
 
     if args.head == 'softmax':
+        # print("compute_loss softmax with smoothing")
         return torch.sum(- y * F.log_softmax(output, dim=1), 1).mean()
 
     if args.head == 'sigmoid':
+        # print("compute_loss sigmoid with smoothing")
         return F.binary_cross_entropy_with_logits(output, y)
 
 
@@ -88,7 +102,10 @@ def evaluate(loader, model, args):
 
         loss = compute_loss(y_hat, y, args)
         avg_loss += loss.item()
-        acc1, acc5 = accuracy(y_hat.cpu(), _y, topk=(1, 5))
+
+        # This is precision
+        acc1, acc5 = accuracy(y_hat.cpu(), _y, topk=(1, 3))
+
         action_correct[_y] += (acc1 / 100.0) + (acc5 / 100.0)
         action_count[_y] += 1
 
@@ -101,11 +118,11 @@ def evaluate(loader, model, args):
         progress_bar.set_postfix({
             'loss': '{:6.4f}'.format(run_loss),
             'acc1': '{:5.2f}%'.format(run_acc1),
-            'acc5': '{:5.2f}%'.format(run_acc5),
+            'acc3': '{:5.2f}%'.format(run_acc5),
         })
 
     accuracy_balance = torch.log1p(2 * action_count - action_correct)
-
+    # print("accuracy_balance", accuracy_balance)
     return (run_loss, run_acc1, run_acc5), accuracy_balance
 
 
@@ -123,8 +140,10 @@ def train(loader, model, optimizer, epoch, args):
 
         x = Variable(x, requires_grad=False)
         y = Variable(y, requires_grad=False)
+        # print("train x.size()", x.size())
+        # print("train y.size()", y)
 
-        y_hat = model(x)
+        y_hat = model(x) # x.size() = (1, N_frames, N_keypoints(31), 3)
 
         loss = compute_loss(y_hat, y, args)
         loss.backward()
@@ -186,7 +205,8 @@ def main(args):
     # Load datasets and build data loaders
     val_dataset = MotionDataset(args.val_data, fps=args.fps, mapper=args.mapper)
     val_actions = val_dataset.actions.keys()
-
+    # print("actions", val_actions)
+    print(args)
     train_dataset = MotionDataset(args.train_data, keep_actions=val_actions, fps=args.fps, offset=args.offset, mapper=args.mapper)
     train_actions = train_dataset.actions.keys()
     
@@ -195,15 +215,16 @@ def main(args):
             len(train_actions), len(val_actions))
 
     in_size, out_size = train_dataset.get_data_size()
-
+    # print("in_size, out_size",in_size, out_size)
     if args.balance == 'none':
         sampler = RandomSampler(train_dataset)
     else:
+        # print("weights are taken into account")
         weights = train_dataset.get_weights()
         sampler = WeightedRandomSampler(weights, len(weights))
 
-    train_loader = DataLoader(train_dataset, batch_size=1, sampler=sampler, num_workers=1, pin_memory=args.cuda)
-    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=args.cuda)
+    train_loader = DataLoader(train_dataset, batch_size=1, sampler=sampler, num_workers=10, pin_memory=args.cuda)
+    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=10, pin_memory=args.cuda)
 
     # Build the model
     model = MotionModel(in_size, out_size,
@@ -235,30 +256,14 @@ def main(args):
         best_acc = 0
         start_epoch = 1
         # Create the run directory and log file
-        train_filename = os.path.splitext(os.path.basename(args.train_data))[0]
+        train_filename = os.path.splitext(os.path.basename(args.train_data))[0][:-6]
         val_filename = os.path.splitext(os.path.basename(args.val_data))[0]
 
         parameters = vars(args)
         parameters.update(dict(train=train_filename, val=val_filename))
 
-        run_name = 'model_tr-{0[train]}_vl-{0[val]}_' \
-                   'bi{0[bidirectional]}_' \
-                   'emb{0[embed]}_' \
-                   'h{0[hd]}_' \
-                   's{0[stack]}_' \
-                   'l{0[layers]}_' \
-                   '{0[head]}_' \
-                   'a{0[accumulate]}_' \
-                   'c{0[clip_norm]}_' \
-                   'd{0[dropout]}_' \
-                   'lr{0[lr]}_' \
-                   'wd{0[wd]}_' \
-                   'e{0[epochs]}_' \
-                   'f{0[fps]}_' \
-                   'o-{0[offset]}_' \
-                   'opt-{0[optim]}_' \
-                   'ls{0[label_smoothing]}_' \
-                   'bal-{0[balance]}'.format(parameters)
+        run_name = train_filename+ "_BI_" + str(args.bidirectional) + "_Clf_L_" +  str(args.layers) +\
+                   "LSTM_" +  str(args.stack) + "Smooth_" +  str(args.label_smoothing) + "_E_" + str(args.epochs)
 
         runs_parent_dir = 'debug' if args.debug else args.run_dir
         run_dir = os.path.join(runs_parent_dir, run_name)
@@ -284,7 +289,7 @@ def main(args):
 
         progress_bar.set_description('EVAL')
         metrics, accuracy_balance = evaluate(val_loader, model, args)
-        print('Eval Epoch {}: Loss={:6.4f} Acc@1={:5.2f} Acc@5={:5.2f}'.format(epoch, *metrics),
+        print('Eval Epoch {}: Loss={:6.4f} Acc@1={:5.2f} Acc@3={:5.2f}'.format(epoch, *metrics),
               file=args.log, flush=True)
 
         current_acc1 = metrics[1]
@@ -310,7 +315,7 @@ def main(args):
             # print(accuracy_balance)
             weights = train_dataset.get_weights(accuracy_balance)
             sampler = WeightedRandomSampler(weights, len(weights))
-            train_loader = DataLoader(train_dataset, batch_size=1, sampler=sampler, num_workers=1, pin_memory=args.cuda)
+            train_loader = DataLoader(train_dataset, batch_size=1, sampler=sampler, num_workers=10, pin_memory=args.cuda)
 
 
 if __name__ == '__main__':
@@ -320,13 +325,13 @@ if __name__ == '__main__':
     parser.add_argument('train_data', help='path to train data file (Pickle file)')
     parser.add_argument('val_data', help='path to val data file (Pickle file)')
     parser.add_argument('--mapper', help='class mapper csv file')
-    parser.add_argument('-f', '--fps', type=int, default=10, help='resampling FPS')
+    parser.add_argument('-f', '--fps', type=int, default=120, help='resampling FPS')
     parser.add_argument('-o', '--offset', choices=['none', 'random'], default='random', help='offset mode when resampling training data')
     parser.add_argument('--balance', choices=['none', 'frequency', 'adaptive'], default='none', help='how to sample during training')
-    parser.add_argument('--ls', '--label-smoothing', type=float, dest='label_smoothing', default=0.1, help='smooth one-hot labels by this factor')
+    parser.add_argument('--ls', '--label-smoothing', type=float, dest='label_smoothing', default=0, help='smooth one-hot labels by this factor')
 
     # NETWORK PARAMS
-    parser.add_argument('--emb', '--embed', dest='embed', type=int, default=48, help='sequence embedding dimensionality (0 for none)')
+    parser.add_argument('--emb', '--embed', dest='embed', type=int, default=0, help='sequence embedding dimensionality (0 for none)')
     parser.add_argument('-b', '--bidirectional', action='store_true', dest='bidirectional', help='use bidirectional LSTM')
     parser.add_argument('-u', '--unidirectional', action='store_false', dest='bidirectional', help='use unidirectional LSTM')
     parser.add_argument('--hd', '--hidden-dim', type=int, default=1024, help='LSTM hidden state dimension')
@@ -338,7 +343,7 @@ if __name__ == '__main__':
     # OPTIMIZER PARAMS
     parser.add_argument('--optim', choices=['sgd', 'adam'], default='adam', help='optimizer')
     # parser.add_argument('-m','--momentum', type=float, default=0.9, help='momentum (only for SGD)')
-    parser.add_argument('-a', '--accumulate', type=int, default=40, help='batch accumulation')
+    parser.add_argument('-a', '--accumulate', type=int, default=100, help='batch accumulation')
     parser.add_argument('-c', '--clip-norm', type=float, default=0.0, help='max gradient norm (0 for no clipping)')
     parser.add_argument('-e', '--epochs', type=int, default=100, help='number of training epochs')
     parser.add_argument('--lr', '--learning-rate', type=float, default=0.0005, help='learning rate')

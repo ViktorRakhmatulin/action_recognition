@@ -14,9 +14,10 @@ class MotionDataset(Dataset):
 
         # check if we are dealing with annotated subsequences or multi-annotated sequences
         self.multi = 'annotations' in self.data[0]
-
+        # print("self.data[0]", self.data[0])
         if mapper:
-            descriptions = pd.read_csv(mapper, sep=';', index_col=0,
+            # print("mapper in dataset")
+            descriptions = pd.read_csv(mapper, sep=';', index_col = 0,
                                        names=['OldLabel', 'Label', 'Description'])
             for s in self.data:
                 if self.multi:
@@ -28,15 +29,17 @@ class MotionDataset(Dataset):
             descriptions = descriptions.groupby('Label').aggregate({'Description': lambda x: os.path.commonprefix(x.tolist())})
 
         else:
+            # print("mapper from data/hdm05_action_descriptions.txt")
             descriptions = pd.read_csv('data/hdm05_action_descriptions.txt', sep=';', index_col=0,
                                        names=['Label', 'Description'])
             descriptions = descriptions.replace({'hdm05_spec_': ''}, regex=True)
 
         assert offset in ('none', 'random', 'all'), "offset must be one of: none, random, all"
+        # print("offset", offset)
 
         self.skip = round(120.0 / fps)
         self.offset = offset
-
+        # print("self.skip",self.skip)
         # for HDM05-15 we remove 'other' class (14)
         if self.multi:
             self.actions = Counter(a['action_id'] for s in self.data for a in s['annotations'] if mapper or a['action_id'] != 14)
@@ -78,7 +81,10 @@ class MotionDataset(Dataset):
             offset = torch.IntTensor(1).random_(self.skip)[0]
         elif self.offset == 'all':
             offset = index // len(self.data)
+
         sequence = sample['data'][offset::self.skip, ...]
+
+        # print("__getitem__", len(sequence))
         x = torch.from_numpy(sequence)
         if self.multi:
             n_samples = len(sample['data'])
@@ -94,6 +100,7 @@ class MotionDataset(Dataset):
         return x, y
 
     def get_weights(self, action_balance=None):
+        # print("get_weights call")
         assert not self.multi, "Cannot use get_weights() with multi-annotated sequences"
         n_samples = float(len(self.data))
         if action_balance is None:
@@ -110,10 +117,11 @@ class MotionDataset(Dataset):
 
 if __name__ == '__main__':
 
-    dataset = MotionDataset('data/split2.pkl', fps=10, mapper='data/HDM05-category_mapper-130vs65.csv')
+    dataset = MotionDataset('data/HDM05-15/HDM05-15-objects-annotations-coords_normPOS.pkl', fps=10,
+                            mapper=None) #'data/HDM05-category_mapper-130vs65.csv'
     print(dataset.actions)
     print(len(dataset.actions))
 
-    dataset = MotionDataset('data/split1.pkl', fps=10, mapper='data/HDM05-category_mapper-130vs65.csv')
-    print(dataset.actions)
-    print(len(dataset.actions))
+    # dataset = MotionDataset('data/split1.pkl', fps=10, mapper='data/HDM05-category_mapper-130vs65.csv')
+    # print(dataset.actions)
+    # print(len(dataset.actions))

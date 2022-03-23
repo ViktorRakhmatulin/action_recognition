@@ -7,6 +7,7 @@ class MotionModel(nn.Module):
     def __init__(self, in_size, out_size, hidden=128, dropout=0.5, bidirectional=True, stack=1, layers=1, embed=0):
         super(MotionModel, self).__init__()
         self.in_size = in_size
+        # print()
         self.bidirectional = bidirectional
         rnn_hidden = hidden // 2 if bidirectional else hidden
 
@@ -29,14 +30,21 @@ class MotionModel(nn.Module):
         self.classifier = nn.Sequential(*classifier_layers)
 
     def forward_lstm(self, input):
-        input = input.view(-1, self.in_size)  # seq, data
+        # input.size() = (1, N_frames, N_keypoints(31), 3)
+        input = input.view(-1, self.in_size)  # input.size() = (N_frames , 93)
+        # print("input.size()", input.size())
         input = self.embed(input) if self.embed is not None else input  # embed all data in the sequence
-        input = input.unsqueeze(1)  # seq, batch, data
+        # input.size()
+        #convert input to a typical vector dimention
+        input = input.unsqueeze(1)  #  input.size() = (N_frames ,1, 93)
+
         return self.lstm(input)
 
     def forward(self, input):
+        # input.size() = (1, N_frames, N_keypoints(31), 3)
         outputs, hidden = self.forward_lstm(input)
         last_out = outputs[-1]  # this is the last hidden state (last timestep) of the last stacked layer
+
         return self.classifier(last_out)
 
     def segment(self, input):
@@ -44,6 +52,7 @@ class MotionModel(nn.Module):
         return self.classifier(outputs)
 
     def steps_forward(self, input):
+        # print("steps_forward")
         outputs, hidden = self.forward_lstm(input)
 
         ''' for bidirectional models, we have to reverse the hidden states

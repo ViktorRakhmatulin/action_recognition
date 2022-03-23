@@ -117,6 +117,7 @@ def load_annotations(annot_file, format, train=True):
 
 
 def main(args):
+    # print(args)
     sequences = get_sequences(args.data)
 
     if args.annotations:  # parse parent sequences containing multiple annotations

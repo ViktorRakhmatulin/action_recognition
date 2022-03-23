@@ -4,12 +4,13 @@ import numpy as np
 import pandas as pd
 import glob2 as glob2
 import torch.nn.functional as F
-
+from sklearn import metrics
 import matplotlib
 import torch
 from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import f1_score
 from torch.autograd import Variable
-
+import time
 from tqdm import tqdm
 
 from utils import get_run_info, load_run, get_run_summary, find_runs
@@ -37,6 +38,7 @@ def train_plot(runs, s):
     run_infos = [get_run_info(run) for run in runs]
     metrics = run_infos[0][1].keys()
     n_metrics = len(metrics)
+    print(metrics)
     fig, axes = plt.subplots(n_metrics, 1, figsize=(5, 3*n_metrics))
     for metric, ax in zip(metrics, axes):
         ax.set_title('Evaluation {}'.format(metric))
@@ -131,6 +133,30 @@ def confusion_plot(runs):
 
         del model, loader, predictions, targets
 
+def make_required_plots(runs):
+    for run in runs:
+        run_info, model, loader = load_run(run, data=args.data)
+        run_dir, _, label, _, params = run_info
+        loader = loader[1]
+        dataset = loader.dataset
+        start = time.time()
+
+        predictions, targets, _ = predict(model, loader, cuda=params['cuda'])
+        end = time.time()
+        overall_accuracy = accuracy_score(targets, predictions)
+        print("overall_accuracy", overall_accuracy)
+        res_time = end - start
+        frames_in_test = 266528
+        performance_per_frame = res_time/frames_in_test
+        print("res_time", res_time,"performance_per_frame",performance_per_frame)
+        print(metrics.classification_report(targets, predictions, digits=3))
+        labels_name = np.unique(targets)
+        cm = metrics.confusion_matrix(targets, predictions)
+        fig = sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=labels_name, yticklabels=labels_name)
+        figure = fig.get_figure()
+        figure.savefig(run_dir)
+        plt.show()
+
 
 def display_status(runs):
     infos = [get_run_info(r) for r in runs]
@@ -199,6 +225,8 @@ def ablation(runs):
 
 def main(args):
     runs = find_runs(args.run_dir)
+    if args.type == 'other-metrics':
+        make_required_plots(runs)
 
     if args.type == 'confusion':
         confusion_plot(runs)
@@ -216,7 +244,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Show misc info about runs')
-    parser.add_argument('type', choices=['confusion', 'status', 'multi-eval', 'ablation'], help='what to plot')
+    parser.add_argument('type', choices=['other-metrics', 'confusion', 'status', 'multi-eval', 'ablation'], help='what to plot')
     parser.add_argument('run_dir', nargs='?', default='runs/', help='folder in which logs are searched')
     parser.add_argument('-d', '--data', help='eval data (for confusion)')
     parser.add_argument('-o', '--output', help='outfile (for status)')
