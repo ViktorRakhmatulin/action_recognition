@@ -25,11 +25,10 @@ Executed  the following command in conda environment (for cuda support)
 
 
 1. Download the preprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
+google disk contains parsed pkl files (full/projected to pixel/dropped data)
+2. Run 'bash parse_HDM05_data.sh` to generate 
+3. Run 'bash train_classification_models.sh` traina LSTM-based classification model on predefined hyperparams 
+4. train_catboost.py should run th eclassic clasifier
 
-2. Run 'bash parse_HDM05_data.sh` to generate data splits 
-3. Run 'bash train_classification_models.sh` to train an LSTM-based classification model 
-Segmentation as far as I understood is aimed to find the beginning and the end of the action in given sequence.
-We are more interested in classification (mapping a sequence to a class) 
-Python train_classify.py`  
-4.  `train_segmentation_models.sh` contains examples for SEGMENTATION task
+
 

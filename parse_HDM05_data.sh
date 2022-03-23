@@ -1,6 +1,19 @@
 # --------------
 # CLASSIFICATION
 # --------------
+pushd data/HDM05-15/
+
+python ../../parse_data.py \
+    HDM05-15-objects-annotations-coords_normPOS.data\
+    -s splits/annotated_subsequence_splits/HDM05-15-part1_processed.txt --sf list \
+    HDM05-15-part1.pkl
+#
+python ../../parse_data.py \
+    HDM05-15-objects-annotations-coords_normPOS.data\
+    -s splits/annotated_subsequence_splits/HDM05-15-part2_processed.txt --sf list \
+    HDM05-15-part2.pkl
+
+popd
 
 ## HDM05-122, 2-FOLD SPLITS (SAME FOR HDM05-65)
 #pushd data/HDM05-122/
@@ -15,19 +28,7 @@
 #    HDM05-122-only-annot-subseq-fold-2-of-2.pkl
 #popd
 
-pushd data/HDM05-15/
 
-python ../../parse_data.py \
-    HDM05-15-objects-annotations-coords_normPOS.data\
-    -s splits/annotated_subsequence_splits/HDM05-15-part1_processed.txt --sf list \
-    HDM05-15-part1.pkl
-#
-python ../../parse_data.py \
-    HDM05-15-objects-annotations-coords_normPOS.data\
-    -s splits/annotated_subsequence_splits/HDM05-15-part2_processed.txt --sf list \
-    HDM05-15-part2.pkl
-
-popd
 
 ## HDM05-122, 10-FOLD SPLITS (SAME FOR HDM05-65)
 
