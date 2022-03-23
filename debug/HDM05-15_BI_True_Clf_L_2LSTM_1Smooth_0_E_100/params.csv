@@ -1,0 +1,2 @@
+train_data,val_data,mapper,fps,offset,balance,label_smoothing,embed,bidirectional,hd,stack,layers,dropout,head,optim,accumulate,clip_norm,epochs,lr,wd,resume,keep,cuda,no_progress,log_every,run_dir,seed,debug,train,val
+data/HDM05-15/HDM05-15-part1.pkl,data/HDM05-15/HDM05-15-part2.pkl,,120,random,none,0,0,True,1024,1,2,0.5,softmax,adam,100,0.0,100,0.0005,0.0001,,False,True,False,100,runs_classification,42,True,HDM05-15,HDM05-15-part2

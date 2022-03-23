@@ -12,7 +12,6 @@ python ../../parse_data.py \
     HDM05-15-objects-annotations-coords_normPOS.data\
     -s splits/annotated_subsequence_splits/HDM05-15-part2_processed.txt --sf list \
     HDM05-15-part2.pkl
-
 popd
 
 ## HDM05-122, 2-FOLD SPLITS (SAME FOR HDM05-65)

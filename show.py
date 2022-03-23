@@ -133,6 +133,7 @@ def confusion_plot(runs):
 
         del model, loader, predictions, targets
 
+# prints required data. Saves confusion matrix
 def make_required_plots(runs):
     for run in runs:
         run_info, model, loader = load_run(run, data=args.data)
@@ -143,8 +144,7 @@ def make_required_plots(runs):
 
         predictions, targets, _ = predict(model, loader, cuda=params['cuda'])
         end = time.time()
-        overall_accuracy = accuracy_score(targets, predictions)
-        print("overall_accuracy", overall_accuracy)
+
         res_time = end - start
         frames_in_test = 266528
         performance_per_frame = res_time/frames_in_test

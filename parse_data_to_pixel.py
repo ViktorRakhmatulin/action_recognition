@@ -16,7 +16,6 @@ from scipy.spatial.transform import Rotation as R
 
 def drop(data_3d):
     data_pixels = np.zeros((data_3d.shape[0], 31, 2), dtype=np.float32)
-
     for index, frame in enumerate(data_3d):
         data_pixels[index] = frame[:, :-1]
 
@@ -104,7 +103,6 @@ def get_ids_to_keep(split_file, format='list', train=True):
         ids = set(ids)
 
     return ids
-
 
 
 def parse_annotated_sequence(lines, annotations):
