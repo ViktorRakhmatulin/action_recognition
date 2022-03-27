@@ -28,12 +28,12 @@ Executed  the following command in conda environment (for cuda support)
 
 To manually parse the data.
 - Download the preprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
-- Run 'bash parse_HDM05_data.sh` to generate required pkl files. google disk contains parsed pkl files (HDM05-122-2fold/projected_to_pixel/dropped data)
+- Run 'bash parse_HDM05_data.sh` to generate the required pkl files. google disk contains parsed pkl files (HDM05-122-2fold/projected_to_pixel/dropped data)
 
-The preprocessed pkl files are uploaded to google drive:
+The preprocessed pkl files are uploaded to the google drive:
 https://drive.google.com/drive/folders/1jZhKJLS3HdQPomMO_6CX-nYSJm7Hx6ho?usp=sharing
 
-1. Place pkl files in data/HDM05-15 or data/HDM05-130 folders 
+1. Place pkl files in data/HDM05-15 (or data/HDM05-130 for HDM05-130 dataset) 
 2. Run 'bash train_classification_models.sh` trains LSTM-based classification model on predefined hyperparams 
 3. train_catboost.py runs CatBoost classifier (including visualization)
 4. Run 'python show.py status debug/HDM05-15_BI_True_Clf_L_2LSTM_1Smooth_0_E_100' (or debug/your_results)
