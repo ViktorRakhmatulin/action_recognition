@@ -26,14 +26,18 @@ Executed  the following command in conda environment (for cuda support)
 - dataset_fighting contains CatBoost and LSTM
 - transformer-dev contains Transformer
 
-1. Download the preprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
+To manually parse the data.
+- Download the preprocessed data archive and extract it in the repo root folder: [hdm05-mocap-data.tar.gz](https://drive.google.com/file/d/1YyQTS2vyK0Z6MdeTd9ko9K3u_E6G8i5c/view?usp=sharing) (~1GB, the original HDM05 dataset is available [here](http://resources.mpi-inf.mpg.de/HDM05/))
+- Run 'bash parse_HDM05_data.sh` to generate required pkl files. google disk contains parsed pkl files (HDM05-122-2fold/projected_to_pixel/dropped data)
 
-2. Run 'bash parse_HDM05_data.sh` to generate required pkl files. google disk contains parsed pkl files (HDM05-122-2fold/projected_to_pixel/dropped data)
-3. Place pkl files in data/HDM05-15 or data/HDM05-130 folders 
-4. Run 'bash train_classification_models.sh` trains LSTM-based classification model on predefined hyperparams 
-5. train_catboost.py runs CatBoost classifier (including visualization)
-6. Run 'python show.py status debug/HDM05-15_BI_True_Clf_L_2LSTM_1Smooth_0_E_100' (or debug/your_results)
+The preprocessed pkl files are uploaded to google drive:
+https://drive.google.com/drive/folders/1jZhKJLS3HdQPomMO_6CX-nYSJm7Hx6ho?usp=sharing
+
+1. Place pkl files in data/HDM05-15 or data/HDM05-130 folders 
+2. Run 'bash train_classification_models.sh` trains LSTM-based classification model on predefined hyperparams 
+3. train_catboost.py runs CatBoost classifier (including visualization)
+4. Run 'python show.py status debug/HDM05-15_BI_True_Clf_L_2LSTM_1Smooth_0_E_100' (or debug/your_results)
 It plots train graphics and describe performance of the model.
-7. Run 'python show.py other-metrics debug/HDM05-15_BI_True_Clf_L_2LSTM_1Smooth_0_E_100' (or debug/your_results)
+5. Run 'python show.py other-metrics debug/HDM05-15_BI_True_Clf_L_2LSTM_1Smooth_0_E_100' (or debug/your_results)
 It prints other metrics and saves confusion matrix 
 
